@@ -15,14 +15,10 @@ public class Main {
 
 	static ArrayList<Data> data;
 	static ArrayList<String> weather,humidity, temp, windy, res;
+	static double mainEntropy; 
 	
 	public static void main(String[] args) throws URISyntaxException {
 		URL path = ClassLoader.getSystemResource("data.txt");
-		
-		
-		
-		
-		
 		
 		data = new ArrayList<Data>();
 		weather = new ArrayList<String>();
@@ -32,7 +28,6 @@ public class Main {
 		res = new ArrayList<String>();
 		
 		String fileName = "data.txt";
-
 		// This will reference one line at a time
 		String line = null;
 
@@ -63,7 +58,55 @@ public class Main {
 			// Or we could just do this:
 			// ex.printStackTrace();
 		}
+		
+		mainEntropy = entropy(res);
+		makeDecisionTree();
+	}
 
+	public static void makeDecisionTree() {
+		// TODO Auto-generated method stub
+		ArrayList<String>[] test = new ArrayList[4];
+		test[0] = weather;
+		test[1] = humidity;
+		test[2] = temp;
+		test[3] = windy;
+		
+		ArrayList<String> first =  getBestAttribute(test,"");
+		
+		for(int i=0; i<4;i++)
+			if(test[i].equals(first))
+				test[i] = null;
+		
+		HashSet<String> hs = new HashSet<String>();
+		for (int i = 0; i < first.size(); i++)
+			hs.add(first.get(i));
+		
+		Iterator<String> i=hs.iterator();
+		
+		ArrayList<String>[] second = new ArrayList[hs.size()];
+		int kk = 0;
+		while(i.hasNext()) {
+			String tmp  = i.next();
+			 second[kk++]= getBestAttribute(test, tmp);
+		}
+		
+		for(int i1=0; i1<hs.size(); i1++)
+			System.out.println(second[i1].get(0));
+	}
+	
+
+	public static ArrayList<String> getBestAttribute(ArrayList<String> arr[], String str) {
+		// TODO Auto-generated method stub
+		double min = 1000000.0;
+		ArrayList<String> minFeature = null;
+		for(int i=0; i<arr.length; i++) {
+			if(data.get(i).toString().contains(str))
+			if(featureBasedSplit(arr[i])<min) {
+				min = featureBasedSplit(arr[i]);
+				minFeature = arr[i];
+			}
+		}
+		return minFeature;
 	}
 
 	public static double entropy(ArrayList<String> arr1) {
@@ -78,7 +121,8 @@ public class Main {
 				yes++;
 		}
 
-		entropy = 0 - log2((double) no / (double) (yes + no)) - log2((double) yes / (double) (yes + no));
+		if(yes==0 || no==0)  return 0;
+		entropy = 0 - (double) no / (double) (yes + no)*log2((double) no / (double) (yes + no)) - (double) yes / (double) (yes + no)*log2((double) yes / (double) (yes + no));
 		return entropy;
 	}
 
@@ -86,7 +130,8 @@ public class Main {
 		return (double) (Math.log(x) / Math.log(2));
 	}
 
-	public void featureBasedSplit(ArrayList<String> arr) {
+	
+	public static double featureBasedSplit(ArrayList<String> arr) {
 		// TODO Auto-generated method stub
 		int yes = 0, no = 0;
 		HashSet<String> hs = new HashSet<String>();
@@ -94,22 +139,27 @@ public class Main {
 			hs.add(arr.get(i));
 		
 		 Iterator<String> i=hs.iterator();  
+		 
+		 double finalEntropyForAttribute  = 0.0;
+		 i.next();
          while(i.hasNext())  
          {  
         	 double temptropy = 0.0;
+        	 ArrayList<String> temp =  new ArrayList<>();
+        	 String s = i.next();
         	 for(int j=0; j<res.size(); j++) {
  				
-        		 if(i.next().equals(arr.get(j))) {
-        			 if(res.get(j).equals("Yes"))
-        				 yes++;
-        			 else no++;
+        		 if(data.get(j).toString().contains(s)) {
+        			temp.add(res.get(j));
  				}
  			}
+        	 temptropy = entropy(temp);
+        	 finalEntropyForAttribute+=(double)((double)temp.size()/(double)res.size())*temptropy;
          }  
 		
-		
-	
-
+		return finalEntropyForAttribute;
 	}
+
+	//ArrayList<String> second
 
 }
